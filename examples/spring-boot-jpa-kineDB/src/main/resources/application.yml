@@ -1,0 +1,21 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    driverClassName: com.itenebris.kinedb.jdbc.KineDriver
+    url: jdbc:kine://localhost:10301/
+    username:
+    password:
+  jpa:
+    show-sql: true # 默认false，在日志里显示执行的sql语句
+    #database: kine
+    hibernate.ddl-auto: none #指定为update，每次启动项目检测表结构有变化的时候会新增字段，表不存在时会新建，如果指定create，则每次启动项目都会清空数据并删除表，再新建
+    database-platform: org.hibernate.dialect.MySQLDialect #目前使用mysql方言
+    hibernate:
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl #指定jpa的自动表生成策略，驼峰自动映射为下划线格式
+        #physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    open-in-view: false
+logging.level.org.hibernate:
+                        SQL: DEBUG
+                        type: TRACE

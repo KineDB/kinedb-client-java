@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.UserMapper">
+
+    <resultMap id="userResultMap" type="pojo.User">
+        <result column="name" property="name"/>
+        <result column="age" property="age"/>
+    </resultMap>
+
+
+    <update id="createDatabase">
+        CREATE DATABASE mysql_db WITH PROPERTIES (CATALOG = 'mysql',HOST = '172.31.31.13',PORT = 8306,DATABASENAME = 'mysql_db',SCHEMA = '',INDEXNAME = '',USERNAME = 'root',PASSWORD = '123456')
+    </update>
+
+    <update id="dropDatabase">
+        DROP DATABASE mysql_db
+    </update>
+
+    <update id="createTable">
+        CREATE TABLE mysql_db.user1 (id BIGINT PRIMARY key NOT NULL, name varchar(20) ,age integer)
+    </update>
+
+    <update id="dropTable">
+        DROP TABLE mysql_db.user1
+    </update>
+
+    <select id="selectAll" resultMap="userResultMap">
+        select * from mysql_db.user1
+    </select>
+
+    <select id="selectById" resultMap="userResultMap">
+        select * from mysql_db.user1 where id = #{id}
+    </select>
+
+    <select id="selectByCondition" resultMap="userResultMap">
+        select * from mysql_db.user1<where>1 = 1<if test="name != null"> and name like #{name} </if><if test="age != null"> and age = #{age} </if></where>
+    </select>
+
+    <select id="selectByConditionSingle" resultMap="userResultMap">
+        select * from mysql_db.user1 <where>
+            <choose>
+                <when test="id != null">
+                    id = #{id}
+                </when>
+                <when test="name != null">
+                    name like #{name}
+                </when>
+                <when test="age != null">
+                    age = #{age}
+                </when>
+
+            </choose>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="pojo.User">
+        insert into mysql_db.user1 (id, name, age) values (#{id},#{name},#{age})
+    </insert>
+
+    <update id="update" parameterType="pojo.User">
+        update mysql_db.user1 <set><if test="name != null">name = #{name},</if><if test="age != null">age = #{age},</if></set>where id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        delete from mysql_db.user1 where id = #{id}
+    </delete>
+
+    <delete id="deleteByIds">
+        delete from mysql_db.user1 where id in<foreach collection="ids" item="id" separator="," open="(" close=")">#{id}</foreach>
+    </delete>
+</mapper>
