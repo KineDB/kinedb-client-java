@@ -1,17 +1,26 @@
 package com.itenebris.kinedb.jdbc;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.RowIdLifetime;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
 import com.itenebris.kinedb.jdbc.connection.KineConnection;
-import com.itenebris.kinedb.jdbc.executor.Kine;
 import com.itenebris.kinedb.jdbc.executor.KineData;
-import com.itenebris.kinedb.jdbc.result.Field;
 import com.itenebris.kinedb.jdbc.result.KineResultSet;
 import com.itenebris.kinedb.jdbc.result.ResultData;
 import com.itenebris.kinedb.jdbc.statement.KinePrepareStatement;
 import com.itenebris.kinedb.jdbc.util.StringUtils;
-import com.sun.rowset.internal.Row;
-
-import java.sql.*;
-import java.util.*;
 
 public class KineDatabaseMetaData implements DatabaseMetaData {
 
