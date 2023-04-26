@@ -13,7 +13,7 @@ This a Java client for kinedb, user can import this jar package to connect kined
 ## 1. Introduce kinedb-jdbc driver jar package into the project  
 ```sh
 <dependency>
-  <groupId>com.itenebris.kinedb</groupId>
+  <groupId>com.itenebris</groupId>
   <artifactId>kinedb-jdbc</artifactId>
   <version>3.20.0</version>
 </dependency>
