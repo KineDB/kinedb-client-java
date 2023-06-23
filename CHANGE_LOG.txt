@@ -1,0 +1,6 @@
+
+3.20.1 (2023-06-15)
+Features
+1. kinedb support execute query with presto 
+2. support use the execute engine in connection uri
+	jdbc:kine://ip:port/database?engine=[native|presto]

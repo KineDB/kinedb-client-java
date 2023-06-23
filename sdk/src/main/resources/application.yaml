@@ -1,0 +1,15 @@
+server:
+    port: 14089
+spring:
+    application:
+        name: kinedb-sdk
+    datasource:
+        driver-class-name: com.itenebris.kinedb.jdbc.KineDriver
+        url: jdbc:kine://127.0.0.1:10301?useUnicode=true&characterEncoding=UTF-8
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: true
+logging:
+    level:
+        com.itenebris.kinedb.jdbc: debug

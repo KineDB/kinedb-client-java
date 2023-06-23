@@ -1,0 +1,38 @@
+syntax = "proto3";
+package proto;
+option java_package = "com.itenebris.kinedb.jdbc.executor";
+option java_multiple_files = false;
+
+message Statement {
+  string sql = 1;
+  string gql = 2;
+  string prompt = 3;
+  string engine = 4;
+}
+
+message ColumnValueRef{
+  string name = 1;
+  string type = 2;
+  bytes value = 3;
+}
+
+message RowRef {
+  repeated ColumnValueRef columns = 1 ;
+}
+
+message Page {
+  repeated RowRef Rows = 1;
+}
+
+message Results {
+  int32 code = 1;
+  string message = 2;
+  string assistant = 3;
+  repeated RowRef rows = 4;
+}
+
+service SynapseService
+{
+  rpc execute(Statement) returns (Results){}
+
+}
