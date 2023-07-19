@@ -13,7 +13,7 @@ public class PreparedStatementTest extends BaseTest{
     Logger log = LoggerFactory.getLogger(this.getClass());
     @Test
     public void testSimpleQuery() throws SQLException {
-        PreparedStatement pstmt = con.prepareStatement("SELECT id ,name,age from mysql100.test1128");
+        PreparedStatement pstmt = con.prepareStatement("SELECT id ,name,age from mysql100.jdbc_demo1");
 
         ResultSet rs = pstmt.executeQuery();
         rs.next();
@@ -23,7 +23,7 @@ public class PreparedStatementTest extends BaseTest{
 
     @Test
     public void testSimpleQuery2() throws SQLException {
-        PreparedStatement pstmt = con.prepareStatement("SELECT id ,name,age from mysql100.test1128 where id > ? and age > ?");
+        PreparedStatement pstmt = con.prepareStatement("SELECT id ,name,age from mysql100.jdbc_demo1 where id > ? and age > ?");
         pstmt.setInt(1, 1);
         pstmt.setInt(2, 1);
         ResultSet rs = pstmt.executeQuery();
@@ -34,7 +34,7 @@ public class PreparedStatementTest extends BaseTest{
 
     @Test
     public void testInsert() throws SQLException {
-        PreparedStatement pstmt = con.prepareStatement("INSERT INTO mysql100.test1128 (id ,name, age) values (?, ?, ?)");
+        PreparedStatement pstmt = con.prepareStatement("INSERT INTO mysql100.jdbc_demo1 (id ,name, age) values (?, ?, ?)");
         pstmt.setInt(1, 1011);
         pstmt.setString(2, "name1001");
         pstmt.setInt(3, 1021);
@@ -45,7 +45,7 @@ public class PreparedStatementTest extends BaseTest{
 
     @Test
     public void testUpdate() throws SQLException {
-        PreparedStatement pstmt = con.prepareStatement("UPDATE mysql100.test1128 set name=?, age=? where id = ?");
+        PreparedStatement pstmt = con.prepareStatement("UPDATE mysql100.jdbc_demo1 set name=?, age=? where id = ?");
         pstmt.setString(1, "name1101");
         pstmt.setInt(2, 11);
         pstmt.setInt(3, 1001);
@@ -56,7 +56,7 @@ public class PreparedStatementTest extends BaseTest{
 
     @Test
     public void testDelete() throws SQLException {
-        PreparedStatement pstmt = con.prepareStatement("DELETE FROM mysql100.test1128 where id = ?");
+        PreparedStatement pstmt = con.prepareStatement("DELETE FROM mysql100.jdbc_demo1 where id = ?");
         pstmt.setInt(1, 1001);
         boolean result = pstmt.execute();
         log.debug("testDelete result {}", result);
@@ -66,12 +66,12 @@ public class PreparedStatementTest extends BaseTest{
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        //TestUtil.createTable(con, "mysql100.test1128", "id bigint primary key not null, name varchar(20) not null, age integer");
+        //TestUtil.createTable(con, "mysql100.jdbc_demo1", "id bigint primary key not null, name varchar(20) not null, age integer");
     }
 
     @Override
     public void tearDown() throws SQLException {
-        //TestUtil.dropTable(con, "mysql100.test1128");
+        //TestUtil.dropTable(con, "mysql100.jdbc_demo1");
         super.tearDown();
     }
 }

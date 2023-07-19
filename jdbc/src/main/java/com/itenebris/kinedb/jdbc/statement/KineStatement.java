@@ -5,16 +5,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.Iterator;
 
 import com.itenebris.kinedb.jdbc.exceptions.SqlError;
+import com.itenebris.kinedb.jdbc.executor.ExecutorParams;
+import com.itenebris.kinedb.jdbc.executor.Kine;
+import com.itenebris.kinedb.jdbc.result.StreamingResultSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.itenebris.kinedb.jdbc.connection.KineConnection;
-import com.itenebris.kinedb.jdbc.result.KineResultSet;
+import com.itenebris.kinedb.jdbc.result.StaticResultSet;
 import com.itenebris.kinedb.jdbc.result.ResultData;
 
-public class KineStatement implements Statement {
+public class KineStatement implements Statement, JdbcStatement {
 
 	Logger log = LoggerFactory.getLogger(this.getClass());
 	protected int maxFieldSize;
@@ -23,9 +27,18 @@ public class KineStatement implements Statement {
 	protected int queryTimeoutInMillis;
 
 	protected KineConnection connection;
-	protected KineResultSet resultSet;
+	protected StaticResultSet resultSet;
 
 	protected int updateCount;
+
+	// now only support forward only
+	private Resultset.Type resultSetType;
+	// use streaming query need this value > 0
+	public int fetchSize;
+	public String currentDatabase;
+
+	public String engine;
+	private boolean enableStreamingResults;
 
 	public KineStatement(KineConnection kineConnection) {
 		this.connection = kineConnection;
@@ -34,12 +47,21 @@ public class KineStatement implements Statement {
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException {
 		try {
-			ResultData data = connection.getExecutor().executeSql(sql);
-
-			KineResultSet kineResultSet = new KineResultSet(data, connection);
-			kineResultSet.setStatement(this);
-			this.resultSet = kineResultSet;
-			return kineResultSet;
+			ExecutorParams executorParams = new ExecutorParams(this.fetchSize, this.currentDatabase, this.engine);
+			if (checkEnableStreamingResults()) {
+				Iterator<Kine.Results> resultsIterator = connection.getExecutor().streamExecuteSql(sql, executorParams);
+				StreamingResultSet resultSet = new StreamingResultSet(resultsIterator);
+				return resultSet;
+			}
+			long start = System.nanoTime();
+			ResultData data = connection.getExecutor().executeSql(sql, executorParams);
+			StaticResultSet staticResultSet = new StaticResultSet(data, connection);
+			staticResultSet.setStatement(this);
+			this.resultSet = staticResultSet;
+			long end = System.nanoTime();
+			long consume = (end - start) / 1000000;
+			log.info("KineStatement.executeQuery consume [{}]", consume);
+			return staticResultSet;
 		} catch (Exception e) {
 			throw new SQLException(e);
 		}
@@ -48,8 +70,9 @@ public class KineStatement implements Statement {
 	@Override
 	public int executeUpdate(String sql) throws SQLException {
 		try {
-			ResultData data = connection.getExecutor().executeSql(sql);
-			this.resultSet = new KineResultSet(data, connection);
+			ExecutorParams executorParams = new ExecutorParams(this.fetchSize, this.currentDatabase, this.engine);
+			ResultData data = connection.getExecutor().executeSql(sql, executorParams);
+			this.resultSet = new StaticResultSet(data, connection);
 			this.resultSet.setStatement(this);
 			if (this.resultSet != null) {
 				this.updateCount = data.getAffectLine();
@@ -142,7 +165,12 @@ public class KineStatement implements Statement {
 	@Override
 	public boolean execute(String s) throws SQLException {
 		try {
-			connection.getExecutor().executeSql(s);
+			//long start = System.nanoTime();
+			ExecutorParams executorParams = new ExecutorParams(this.fetchSize, this.currentDatabase, this.engine);
+			connection.getExecutor().executeSql(s, executorParams);
+//			long end = System.nanoTime();
+//			long consume = (end - start) / 1000000;
+//			log.info("KineStatement.execute consume [{}]", consume);
 			return true;
 		} catch (Exception e) {
 			throw new SQLException(e);
@@ -174,22 +202,27 @@ public class KineStatement implements Statement {
 
 	@Override
 	public void setFetchDirection(int i) throws SQLException {
-
+		Resultset.Type type = Resultset.Type.fromValue(i, Resultset.Type.FORWARD_ONLY);
+		this.resultSetType = type;
 	}
 
 	@Override
 	public int getFetchDirection() throws SQLException {
-		return 0;
+		return this.resultSetType.getIntValue();
 	}
 
 	@Override
-	public void setFetchSize(int i) throws SQLException {
-
+	public void setFetchSize(int rows) throws SQLException {
+		if ((rows >= 0 || rows == Integer.MIN_VALUE) && (this.maxRows <= 0 || rows <= this.getMaxRows())) {
+			this.fetchSize = rows;
+		} else {
+			throw new SQLException("fetchSize must be less than " + this.maxRows);
+		}
 	}
 
 	@Override
 	public int getFetchSize() throws SQLException {
-		return 0;
+		return this.fetchSize;
 	}
 
 	@Override
@@ -199,7 +232,7 @@ public class KineStatement implements Statement {
 
 	@Override
 	public int getResultSetType() throws SQLException {
-		return 0;
+		return Resultset.Type.FORWARD_ONLY.getIntValue();
 	}
 
 	@Override
@@ -323,4 +356,61 @@ public class KineStatement implements Statement {
 	public boolean isWrapperFor(Class<?> aClass) throws SQLException {
 		return false;
 	}
+
+	public boolean checkEnableStreamingResults() {
+		if (this.enableStreamingResults) {
+			return true;
+		}
+		if (this.fetchSize > 0 && this.resultSetType == Resultset.Type.FORWARD_ONLY) {
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void enableStreamingResults() throws SQLException {
+		this.setFetchSize(Integer.MIN_VALUE);
+		// we not consider resultSet type now
+		this.setResultType(Resultset.Type.FORWARD_ONLY);
+		this.enableStreamingResults = true;
+	}
+
+	@Override
+	public void disableStreamingResults() throws SQLException {
+		this.enableStreamingResults = false;
+	}
+
+	public int getResultFetchSize() {
+		return this.fetchSize;
+	}
+
+	public void setResultFetchSize(int fetchSize) {
+		this.fetchSize = fetchSize;
+	}
+
+	public Resultset.Type getResultType() {
+		return this.resultSetType;
+	}
+
+	public void setResultType(Resultset.Type resultSetType) {
+		this.resultSetType = resultSetType;
+	}
+
+	public String getCurrentDatabase() {
+		return this.currentDatabase;
+	}
+
+	public void setCurrentDatabase(String currentDatabase) {
+		this.currentDatabase = currentDatabase;
+	}
+
+	public String getEngine() {
+		return engine;
+	}
+
+	public void setEngine(String engine) {
+		this.engine = engine;
+	}
+
+
 }

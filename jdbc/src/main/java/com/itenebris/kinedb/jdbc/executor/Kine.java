@@ -65,6 +65,24 @@ public final class Kine {
      */
     com.google.protobuf.ByteString
         getEngineBytes();
+
+    /**
+     * <code>string defaultDatabase = 5;</code>
+     * @return The defaultDatabase.
+     */
+    String getDefaultDatabase();
+    /**
+     * <code>string defaultDatabase = 5;</code>
+     * @return The bytes for defaultDatabase.
+     */
+    com.google.protobuf.ByteString
+        getDefaultDatabaseBytes();
+
+    /**
+     * <code>int32 fetchSize = 6;</code>
+     * @return The fetchSize.
+     */
+    int getFetchSize();
   }
   /**
    * Protobuf type {@code proto.Statement}
@@ -83,6 +101,7 @@ public final class Kine {
       gql_ = "";
       prompt_ = "";
       engine_ = "";
+      defaultDatabase_ = "";
     }
 
     @Override
@@ -137,6 +156,17 @@ public final class Kine {
               String s = input.readStringRequireUtf8();
 
               engine_ = s;
+              break;
+            }
+            case 42: {
+              String s = input.readStringRequireUtf8();
+
+              defaultDatabase_ = s;
+              break;
+            }
+            case 48: {
+
+              fetchSize_ = input.readInt32();
               break;
             }
             default: {
@@ -325,6 +355,55 @@ public final class Kine {
       }
     }
 
+    public static final int DEFAULTDATABASE_FIELD_NUMBER = 5;
+    private volatile Object defaultDatabase_;
+    /**
+     * <code>string defaultDatabase = 5;</code>
+     * @return The defaultDatabase.
+     */
+    @Override
+    public String getDefaultDatabase() {
+      Object ref = defaultDatabase_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        defaultDatabase_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string defaultDatabase = 5;</code>
+     * @return The bytes for defaultDatabase.
+     */
+    @Override
+    public com.google.protobuf.ByteString
+        getDefaultDatabaseBytes() {
+      Object ref = defaultDatabase_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (String) ref);
+        defaultDatabase_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int FETCHSIZE_FIELD_NUMBER = 6;
+    private int fetchSize_;
+    /**
+     * <code>int32 fetchSize = 6;</code>
+     * @return The fetchSize.
+     */
+    @Override
+    public int getFetchSize() {
+      return fetchSize_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @Override
     public final boolean isInitialized() {
@@ -351,6 +430,12 @@ public final class Kine {
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(engine_)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, engine_);
       }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(defaultDatabase_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, defaultDatabase_);
+      }
+      if (fetchSize_ != 0) {
+        output.writeInt32(6, fetchSize_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -371,6 +456,13 @@ public final class Kine {
       }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(engine_)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, engine_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(defaultDatabase_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, defaultDatabase_);
+      }
+      if (fetchSize_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(6, fetchSize_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -395,6 +487,10 @@ public final class Kine {
           .equals(other.getPrompt())) return false;
       if (!getEngine()
           .equals(other.getEngine())) return false;
+      if (!getDefaultDatabase()
+          .equals(other.getDefaultDatabase())) return false;
+      if (getFetchSize()
+          != other.getFetchSize()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -414,6 +510,10 @@ public final class Kine {
       hash = (53 * hash) + getPrompt().hashCode();
       hash = (37 * hash) + ENGINE_FIELD_NUMBER;
       hash = (53 * hash) + getEngine().hashCode();
+      hash = (37 * hash) + DEFAULTDATABASE_FIELD_NUMBER;
+      hash = (53 * hash) + getDefaultDatabase().hashCode();
+      hash = (37 * hash) + FETCHSIZE_FIELD_NUMBER;
+      hash = (53 * hash) + getFetchSize();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -555,6 +655,10 @@ public final class Kine {
 
         engine_ = "";
 
+        defaultDatabase_ = "";
+
+        fetchSize_ = 0;
+
         return this;
       }
 
@@ -585,6 +689,8 @@ public final class Kine {
         result.gql_ = gql_;
         result.prompt_ = prompt_;
         result.engine_ = engine_;
+        result.defaultDatabase_ = defaultDatabase_;
+        result.fetchSize_ = fetchSize_;
         onBuilt();
         return result;
       }
@@ -648,6 +754,13 @@ public final class Kine {
         if (!other.getEngine().isEmpty()) {
           engine_ = other.engine_;
           onChanged();
+        }
+        if (!other.getDefaultDatabase().isEmpty()) {
+          defaultDatabase_ = other.defaultDatabase_;
+          onChanged();
+        }
+        if (other.getFetchSize() != 0) {
+          setFetchSize(other.getFetchSize());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -978,6 +1091,113 @@ public final class Kine {
   checkByteStringIsUtf8(value);
         
         engine_ = value;
+        onChanged();
+        return this;
+      }
+
+      private Object defaultDatabase_ = "";
+      /**
+       * <code>string defaultDatabase = 5;</code>
+       * @return The defaultDatabase.
+       */
+      public String getDefaultDatabase() {
+        Object ref = defaultDatabase_;
+        if (!(ref instanceof String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          String s = bs.toStringUtf8();
+          defaultDatabase_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      /**
+       * <code>string defaultDatabase = 5;</code>
+       * @return The bytes for defaultDatabase.
+       */
+      public com.google.protobuf.ByteString
+          getDefaultDatabaseBytes() {
+        Object ref = defaultDatabase_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (String) ref);
+          defaultDatabase_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string defaultDatabase = 5;</code>
+       * @param value The defaultDatabase to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDefaultDatabase(
+          String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        defaultDatabase_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string defaultDatabase = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDefaultDatabase() {
+        
+        defaultDatabase_ = getDefaultInstance().getDefaultDatabase();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string defaultDatabase = 5;</code>
+       * @param value The bytes for defaultDatabase to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDefaultDatabaseBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        defaultDatabase_ = value;
+        onChanged();
+        return this;
+      }
+
+      private int fetchSize_ ;
+      /**
+       * <code>int32 fetchSize = 6;</code>
+       * @return The fetchSize.
+       */
+      @Override
+      public int getFetchSize() {
+        return fetchSize_;
+      }
+      /**
+       * <code>int32 fetchSize = 6;</code>
+       * @param value The fetchSize to set.
+       * @return This builder for chaining.
+       */
+      public Builder setFetchSize(int value) {
+        
+        fetchSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int32 fetchSize = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearFetchSize() {
+        
+        fetchSize_ = 0;
         onChanged();
         return this;
       }
@@ -4617,18 +4837,20 @@ public final class Kine {
       descriptor;
   static {
     String[] descriptorData = {
-      "\n\nkine.proto\022\005proto\"E\n\tStatement\022\013\n\003sql\030" +
+      "\n\nkine.proto\022\005proto\"q\n\tStatement\022\013\n\003sql\030" +
       "\001 \001(\t\022\013\n\003gql\030\002 \001(\t\022\016\n\006prompt\030\003 \001(\t\022\016\n\006en" +
-      "gine\030\004 \001(\t\";\n\016ColumnValueRef\022\014\n\004name\030\001 \001" +
-      "(\t\022\014\n\004type\030\002 \001(\t\022\r\n\005value\030\003 \001(\014\"0\n\006RowRe" +
-      "f\022&\n\007columns\030\001 \003(\0132\025.proto.ColumnValueRe" +
-      "f\"#\n\004Page\022\033\n\004Rows\030\001 \003(\0132\r.proto.RowRef\"X" +
-      "\n\007Results\022\014\n\004code\030\001 \001(\005\022\017\n\007message\030\002 \001(\t" +
-      "\022\021\n\tassistant\030\003 \001(\t\022\033\n\004rows\030\004 \003(\0132\r.prot" +
-      "o.RowRef2?\n\016SynapseService\022-\n\007execute\022\020." +
-      "proto.Statement\032\016.proto.Results\"\000B&\n\"com" +
-      ".itenebris.kinedb.jdbc.executorP\000b\006proto" +
-      "3"
+      "gine\030\004 \001(\t\022\027\n\017defaultDatabase\030\005 \001(\t\022\021\n\tf" +
+      "etchSize\030\006 \001(\005\";\n\016ColumnValueRef\022\014\n\004name" +
+      "\030\001 \001(\t\022\014\n\004type\030\002 \001(\t\022\r\n\005value\030\003 \001(\014\"0\n\006R" +
+      "owRef\022&\n\007columns\030\001 \003(\0132\025.proto.ColumnVal" +
+      "ueRef\"#\n\004Page\022\033\n\004Rows\030\001 \003(\0132\r.proto.RowR" +
+      "ef\"X\n\007Results\022\014\n\004code\030\001 \001(\005\022\017\n\007message\030\002" +
+      " \001(\t\022\021\n\tassistant\030\003 \001(\t\022\033\n\004rows\030\004 \003(\0132\r." +
+      "proto.RowRef2t\n\016SynapseService\022-\n\007execut" +
+      "e\022\020.proto.Statement\032\016.proto.Results\"\000\0223\n" +
+      "\rstreamExecute\022\020.proto.Statement\032\016.proto" +
+      ".Results0\001B&\n\"com.itenebris.kinedb.jdbc." +
+      "executorP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -4639,7 +4861,7 @@ public final class Kine {
     internal_static_proto_Statement_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_proto_Statement_descriptor,
-        new String[] { "Sql", "Gql", "Prompt", "Engine", });
+        new String[] { "Sql", "Gql", "Prompt", "Engine", "DefaultDatabase", "FetchSize", });
     internal_static_proto_ColumnValueRef_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_proto_ColumnValueRef_fieldAccessorTable = new

@@ -54,7 +54,7 @@ public class StatementTest2 extends BaseTest2{
     @Test
     public void testQuery() throws SQLException{
         Statement stmt = con.createStatement();
-        ResultSet result1 = stmt.executeQuery(TestUtil.selectSQL("t_user", "id,name,age", null));
+        ResultSet result1 = stmt.executeQuery(TestUtil.selectSQL("jdbc_demo1", "id,name,age", null));
         //ResultSet result2 = stmt.executeQuery(TestUtil.selectSQL("jdbc_demo1", "id,name,age", "id > 1"));
         //ResultSet result3 = stmt.executeQuery(TestUtil.selectSQL("jdbc_demo1", "count(*)", null));
 

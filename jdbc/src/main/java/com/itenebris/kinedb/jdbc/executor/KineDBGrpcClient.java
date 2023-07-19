@@ -6,12 +6,15 @@ import com.itenebris.kinedb.jdbc.KineType;
 import com.itenebris.kinedb.jdbc.result.ResultData;
 import com.itenebris.kinedb.jdbc.util.KineTypeUtils;
 import com.itenebris.kinedb.jdbc.util.StringUtils;
+import com.sun.corba.se.impl.protocol.giopmsgheaders.RequestMessage;
 import io.grpc.*;
+import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -24,9 +27,16 @@ public class KineDBGrpcClient {
     ManagedChannel channel;
     public SynapseServiceGrpc.SynapseServiceBlockingStub blockingStub;
 
+    public SynapseServiceGrpc.SynapseServiceStub asyncStub;
+
     final ThreadPoolExecutor grpcExecutor ;
 
-    public KineDBGrpcClient(String ip, int port, String database, String engine) {
+    String engine;
+    String database;
+
+    int fetchSize;
+
+    public KineDBGrpcClient(String ip, int port, String database, String engine, int fetchSize) {
         grpcExecutor = new ThreadPoolExecutor(Runtime.getRuntime()
                 .availableProcessors() * 8,
                 Runtime.getRuntime().availableProcessors() * 8, 1L, TimeUnit.MINUTES,
@@ -35,26 +45,29 @@ public class KineDBGrpcClient {
                         .setDaemon(true)
                         .setNameFormat("kineDB-grpc-client-executor-%d")
                         .build());
-
+        this.database = database;
+        this.engine = engine;
+        this.fetchSize = fetchSize;
         connectToServer(ip, port, database, engine);
     }
 
     public void connectToServer(String serverIp, int serverPort, String database, String engine){
-        ManagedChannelBuilder<?> o = ManagedChannelBuilder.forAddress(serverIp, serverPort)
-                .executor(grpcExecutor)
-                .compressorRegistry(CompressorRegistry.getDefaultInstance())
-                .decompressorRegistry(DecompressorRegistry.getDefaultInstance())
-                .maxInboundMessageSize(10 * 1024 * 1024)
-                .keepAliveTime(6 * 60 * 1000, TimeUnit.MILLISECONDS)
-                .usePlaintext();
+//        ManagedChannelBuilder<?> builder = ManagedChannelBuilder.forAddress(serverIp, serverPort)
+//                .executor(grpcExecutor)
+//                .compressorRegistry(CompressorRegistry.getDefaultInstance())
+//                .decompressorRegistry(DecompressorRegistry.getDefaultInstance())
+//                .maxInboundMessageSize(1024 * 1024 * 1024)
+//                .keepAliveTime(6 * 60 * 1000, TimeUnit.MILLISECONDS)
+//                .usePlaintext();
         ManagedChannelBuilder builder = ManagedChannelBuilder.forAddress(serverIp, serverPort).
-                maxInboundMessageSize(2147483647).
+                maxInboundMessageSize(1024 * 1024 * 1024).
                 usePlaintext();
 
         ClientInterceptor initInterceptor = new GrpcClientInterceptor(database, engine);
 
         this.channel = builder.intercept(initInterceptor).build();
-        blockingStub = SynapseServiceGrpc.newBlockingStub(channel);
+        this.blockingStub = SynapseServiceGrpc.newBlockingStub(channel);
+        this.asyncStub = SynapseServiceGrpc.newStub(channel);
         log.debug("KineDBGrpcClient connectToServer serverIp:" + serverIp + " serverPort:" + serverPort +" success");
     }
 
@@ -109,8 +122,8 @@ public class KineDBGrpcClient {
                             //return headers
 
                             String returnSessionId = headers.get(SESSION_ID_KEY);
-                            log.info("InitClientInterceptor header received from server {}", headers);
-                            System.out.println("InitClientInterceptor get sessionId from server " + returnSessionId);
+                            //log.info("InitClientInterceptor header received from server {}", headers);
+                            log.info("InitClientInterceptor get sessionId from server " + returnSessionId);
                             sessionId = returnSessionId;
                             super.onHeaders(headers);
                         }
@@ -122,86 +135,108 @@ public class KineDBGrpcClient {
     }
 
 
-    public ResultData executeSql(String sql) throws Exception {
-        Kine.Statement request = Kine.Statement.newBuilder().setSql(sql).build();
+    public ResultData executeSql(String sql, ExecutorParams executorParams) throws Exception {
+        long start = System.nanoTime();
+        Kine.Statement request = buildRequest(sql, executorParams);
         Kine.Results results = this.blockingStub.execute(request);
 
-        log.debug("kineDBGrpc executeSql response code :" + results.getCode() + " message : "+ results.getMessage());
+        log.info("kineDBGrpc executeSql response code:{}, message:{}, consume:{}",results.getCode(), results.getMessage(), (System.nanoTime()-start)/1000000);
         if (results.getCode() != 200) {
             throw new SQLException(results.getMessage());
         }
 
-        KineData result = convertExecuteSqlResult(results);
+        KineData result = KineData.convertExecuteSqlResult(results);
         result.buildIndexMapping();
+        long end = System.nanoTime();
+        long consume = (end - start) / 1000000;
+        log.info("kinedb client executeSql consume [{}]", consume);
         return result;
     }
 
-    private static KineData convertExecuteSqlResult(Kine.Results result) throws SQLException {
-        log.debug("ExecuteSQL result.Rows length " + result.getRowsCount());
-        int rowCount = result.getRowsCount();
+    public Iterator<Kine.Results> streamExecuteSql(String sql, ExecutorParams executorParams) {
 
-        // 1. use the first row to generate the result rowNames
-        List<String> rowNames = null;
-        List<String> rowTypes = null;
-        if (rowCount > 0) {
-            Kine.RowRef firstRow = result.getRows(0);
-            rowNames = new ArrayList<>(firstRow.getColumnsCount());
-            rowTypes = new ArrayList<>(firstRow.getColumnsCount());
+        Kine.Statement request = buildRequest(sql, executorParams);
+        Iterator<Kine.Results> resultsIterator = this.blockingStub.streamExecute(request);
+        log.info("streamExecuteSql build resultsIterator success for sql [{}]", sql);
+        return resultsIterator;
+    }
 
-            for (int i=0; i< firstRow.getColumnsCount(); i++) {
-                Kine.ColumnValueRef column = firstRow.getColumns(i);
-                rowNames.add(column.getName());
-                rowTypes.add(column.getType());
+    private Kine.Statement buildRequest(String sql, ExecutorParams executorParams) {
+        Kine.Statement.Builder builder = Kine.Statement.newBuilder();
+        builder.setSql(sql);
+        String defaultDatabase = executorParams.getDefaultDatabase();
+        if (StringUtils.isBlank(defaultDatabase)) {
+            defaultDatabase = this.database;
+        }
+        String engine = executorParams.getEngine();
+        if (StringUtils.isBlank(engine)) {
+            engine = this.engine;
+        }
+        int fetchSize = executorParams.getFetchSize();
+        if (fetchSize <= 0) {
+            fetchSize = this.fetchSize;
+        }
+        if (StringUtils.isNotBlank(defaultDatabase)) {
+            builder.setDefaultDatabase(defaultDatabase);
+        }
+        if (StringUtils.isNotBlank(engine)) {
+            builder.setEngine(engine);
+        }
+        if (fetchSize > 0) {
+            builder.setFetchSize(fetchSize);
+        }
+        Kine.Statement request = builder.build();
+        return request;
+    }
+
+    public void streamExecute(String sql) throws SQLException {
+        long start = System.nanoTime();
+
+        try {
+            Context.CancellableContext streamExecuteContext = null;
+
+            Kine.Statement request = Kine.Statement.newBuilder().setSql(sql).build();
+            StreamObserver<Kine.Results> responseObserver = new StreamObserver<Kine.Results>() {
+                @Override
+                public void onNext(Kine.Results value) {
+                    System.out.println("streamExecute result = \n" + value);
+                }
+                @Override
+                public void onError(Throwable t) {
+                    log.info("kineDBGrpc streamExecute error message:{}", t);
+                }
+                @Override
+                public void onCompleted() {
+                    log.info("kineDBGrpc streamExecute completed");
+                }
+            };
+
+            Runnable streamExecuteTask = () -> asyncStub.streamExecute(request, responseObserver);
+            if (streamExecuteContext != null && !streamExecuteContext.isCancelled()) {
+                log.info("kineDBGrpc streamExecute already executing");
+                return;
             }
-        }
-        //System.out.println("convertExecuteSqlResultRow rowNames: " + rowNames);
-
-        // 2. generate the result rowValues
-        List<Object[]> rowValues  = new ArrayList<>(rowCount);
-        for (int i=0; i<rowCount; i++) {
-            Object[] rowValue = convertExecuteSqlResultRow(result.getRows(i));
-            rowValues.add(rowValue);
+            streamExecuteContext = Context.current().withCancellation();
+            streamExecuteContext.run(streamExecuteTask);
+        } catch (Exception e) {
+            log.error("kineDBGrpc streamExecute error", e);
+            throw new SQLException(e.getMessage());
         }
 
-
-        KineData resultData = new KineData();
-        if (rowNames != null) {
-            resultData.setRowNames(rowNames.toArray((new String[0])));
-            resultData.setTypes(rowTypes.toArray((new String[0])));
-            resultData.setRowValues(rowValues.toArray(new Object[0][0]));
-        }
-
-        //System.out.println("ExecuteSQL result :\n " + resultData);
-        return resultData;
+        long end = System.nanoTime();
+        long consume = (end - start) / 1000000;
+        log.info("kineDBGrpc streamExecute consume [{}]", consume);
+        //return null;
     }
-
-    private static Object[] convertExecuteSqlResultRow(Kine.RowRef row ) throws SQLException {
-
-        List<Object> values = new ArrayList<>();
-
-        for (int i=0; i<row.getColumnsCount(); i++) {
-            Kine.ColumnValueRef columnValue = row.getColumns(i);
-            Object colValue = convertColumnValue(columnValue);
-            values.add(colValue);
-        }
-        //System.out.println("convertExecuteSqlResultRow rowValue: " + values);
-        return values.toArray();
-    }
-
-    private static Object convertColumnValue(Kine.ColumnValueRef columnValue) throws SQLException {
-        KineType kineType = KineType.getByName(columnValue.getType());
-        Object value = KineTypeUtils.kineTypeBytesToJavaTypes(kineType, columnValue.getValue().toByteArray());
-        return value;
-    }
-
 
     public static void main(String[] args) throws InvalidProtocolBufferException {
-        KineDBGrpcClient kineDBGrpcClient = new KineDBGrpcClient("127.0.0.1", 10301, "mysql_db", "native");
+        KineDBGrpcClient kineDBGrpcClient = new KineDBGrpcClient("127.0.0.1", 10301, "mysql_db", "native", 0);
 
         String sql = "select * from mysql_db.t_user where id > 0";
 
         try {
-            kineDBGrpcClient.executeSql(sql);
+            ExecutorParams executorParams = new ExecutorParams(1000, "mysql_db", "native");
+            kineDBGrpcClient.executeSql(sql, executorParams);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -213,6 +248,22 @@ public class KineDBGrpcClient {
 //        } catch (Exception e) {
 //            throw new RuntimeException(e);
 //        }
+    }
+
+    public String getEngine() {
+        return engine;
+    }
+
+    public void setEngine(String engine) {
+        this.engine = engine;
+    }
+
+    public String getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(String database) {
+        this.database = database;
     }
 
 }

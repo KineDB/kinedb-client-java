@@ -24,6 +24,7 @@ public class DriverUri {
     private URI uri;
     private String database;
     private String engine;
+    private int fetchSize;
     private String user;
     private boolean useSecureConnection;
 
@@ -38,7 +39,7 @@ public class DriverUri {
         // no database in kine db
         initDatabase();
         initEngine();
-
+        initFetchSize();
     }
 
     private URI parseDriverUrl(String url) throws SQLException {
@@ -99,6 +100,13 @@ public class DriverUri {
         }
     }
 
+    private void initFetchSize() {
+        Map<String, List<String>> params = getParams(this.originalUrl);
+        if (params.containsKey("fetchSize")) {
+            fetchSize = Integer.parseInt(params.get("fetchSize").get(0));
+        }
+    }
+
     private Map<String, List<String>> getParams(String url) {
         try {
             Map<String, List<String>> params = new HashMap<>();
@@ -151,6 +159,10 @@ public class DriverUri {
 
     public String getEngine() {
         return engine;
+    }
+
+    public int getFetchSize() {
+        return fetchSize;
     }
 
     public String getHttpUri() {

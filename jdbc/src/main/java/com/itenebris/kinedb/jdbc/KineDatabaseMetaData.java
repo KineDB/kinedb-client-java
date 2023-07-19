@@ -1,14 +1,11 @@
 package com.itenebris.kinedb.jdbc;
 
 import com.itenebris.kinedb.jdbc.connection.KineConnection;
-import com.itenebris.kinedb.jdbc.executor.Kine;
 import com.itenebris.kinedb.jdbc.executor.KineData;
-import com.itenebris.kinedb.jdbc.result.Field;
-import com.itenebris.kinedb.jdbc.result.KineResultSet;
+import com.itenebris.kinedb.jdbc.result.StaticResultSet;
 import com.itenebris.kinedb.jdbc.result.ResultData;
 import com.itenebris.kinedb.jdbc.statement.KinePrepareStatement;
 import com.itenebris.kinedb.jdbc.util.StringUtils;
-import com.sun.rowset.internal.Row;
 
 import java.sql.*;
 import java.util.*;
@@ -650,13 +647,13 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
     @Override
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
             throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     protected ResultSet getDatabases() throws SQLException {
@@ -740,7 +737,7 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
     @Override
     public ResultSet getSchemas() throws SQLException {
         ResultSet databaseResultSet = this.getDatabases();
-        ResultData resultData = ((KineResultSet)databaseResultSet).getData();
+        ResultData resultData = ((StaticResultSet)databaseResultSet).getData();
         resultData.setRowNames(new String[]{"TABLE_SCHEM"});
         return databaseResultSet;
     }
@@ -748,7 +745,7 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
     @Override
     public ResultSet getCatalogs() throws SQLException {
         ResultSet databaseResultSet = this.getDatabases();
-        ResultData resultData = ((KineResultSet)databaseResultSet).getData();
+        ResultData resultData = ((StaticResultSet)databaseResultSet).getData();
         resultData.setRowNames(new String[]{"TABLE_CAT"});
         return databaseResultSet;
     }
@@ -771,36 +768,36 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
         resultData.setTypes(rowTypes.toArray((new String[0])));
         resultData.setRowValues(rowValues.toArray(new Object[0][0]));
 
-        return new KineResultSet(resultData, this.connection);
+        return new StaticResultSet(resultData, this.connection);
     }
 
     @Override
     public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
             throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
             throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableNamePattern)
             throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
             throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
@@ -817,7 +814,7 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
             sqlBuf.append(table);
 
             results = stmt.executeQuery(sqlBuf.toString());
-            ResultData resultData = ((KineResultSet)results).getData();
+            ResultData resultData = ((StaticResultSet)results).getData();
             Object[][] rows = resultData.rowValues;
             List<Object[]> primaryRows = new ArrayList<>();
             Object[] columnNames = resultData.rowNames;
@@ -847,18 +844,18 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable,
             String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     protected byte[] string2bytes(String s) throws SQLException {
@@ -997,7 +994,7 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
 //        } catch (Exception e) {
 //            throw SQLExceptionsMapping.translateException(var4, this.getExceptionInterceptor());
 //        }
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
@@ -1085,7 +1082,7 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
     @Override
     public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types)
             throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
@@ -1115,18 +1112,18 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getSuperTypes(String catalog, String schemaPattern, String typeNamePattern) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern,
             String attributeNamePattern) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
@@ -1181,7 +1178,7 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
@@ -1196,25 +1193,25 @@ public class KineDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getClientInfoProperties() throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
             String columnNamePattern) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override
     public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
             String columnNamePattern) throws SQLException {
-        return new KineResultSet(new KineData(), this.connection);
+        return new StaticResultSet(new KineData(), this.connection);
     }
 
     @Override

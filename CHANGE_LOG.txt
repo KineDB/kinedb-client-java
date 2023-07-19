@@ -1,4 +1,19 @@
 
+
+3.3.0 (2023-07-14)
+Features
+1. support streaming query for big table to avoid OOM
+	PreparedStatement pstmt = con.prepareStatement("select * from db.table");
+	pstmt.setFetchSize(1000);
+	pstmt.setFetchDirection(ResultSet.FETCH_FORWARD);
+	ResultSet rs = pstmt.executeQuery();
+	while(rs.next()) {
+		long column = rs.getLong("columnName");
+		System.out.println("testStreamingQuery1 column is = "+ column);
+	}
+	rs.close();
+	pstmt.close();
+
 3.20.1 (2023-06-15)
 Features
 1. kinedb support execute query with presto 

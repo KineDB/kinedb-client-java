@@ -23,14 +23,18 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
+import com.itenebris.kinedb.jdbc.executor.ExecutorParams;
+import com.itenebris.kinedb.jdbc.executor.Kine;
+import com.itenebris.kinedb.jdbc.result.StreamingResultSet;
 import com.itenebris.kinedb.jdbc.util.ConvertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.itenebris.kinedb.jdbc.connection.KineConnection;
-import com.itenebris.kinedb.jdbc.result.KineResultSet;
+import com.itenebris.kinedb.jdbc.result.StaticResultSet;
 import com.itenebris.kinedb.jdbc.result.ResultData;
 
 public class KinePrepareStatement extends KineStatement implements PreparedStatement {
@@ -132,8 +136,18 @@ public class KinePrepareStatement extends KineStatement implements PreparedState
     public ResultSet executeQuery() throws SQLException {
         String sql = prepareSql();
         try {
-            ResultData data = connection.getExecutor().executeSql(sql);
-            this.resultSet = new KineResultSet(data, connection);
+            ExecutorParams executorParams = new ExecutorParams(this.fetchSize, this.currentDatabase, this.engine);
+            if (super.checkEnableStreamingResults()) {
+                Iterator<Kine.Results> resultsIterator = connection.getExecutor().streamExecuteSql(sql, executorParams);
+                StreamingResultSet resultSet = new StreamingResultSet(resultsIterator);
+                return resultSet;
+            }
+            long start = System.nanoTime();
+            ResultData data = connection.getExecutor().executeSql(sql, executorParams);
+            this.resultSet = new StaticResultSet(data, connection);
+            long end = System.nanoTime();
+            long consume = (end - start) / 1000000;
+            log.info("KinePrepareStatement.executeQuery consume [{}]", consume);
             return this.resultSet;
         } catch (Exception e) {
             throw new SQLException(e);
@@ -142,10 +156,11 @@ public class KinePrepareStatement extends KineStatement implements PreparedState
 
     @Override
     public int executeUpdate() throws SQLException {
-        String sql = prepareSql();
+        String sql = this.prepareSql();
         try {
-            ResultData data = connection.getExecutor().executeSql(sql);
-            this.resultSet = new KineResultSet(data, connection);
+            ExecutorParams executorParams = new ExecutorParams(this.fetchSize, this.currentDatabase, this.engine);
+            ResultData data = connection.getExecutor().executeSql(sql, executorParams);
+            this.resultSet = new StaticResultSet(data, connection);
             if (this.resultSet != null) {
                 this.updateCount = data.size();
                 return data.size();
@@ -160,8 +175,9 @@ public class KinePrepareStatement extends KineStatement implements PreparedState
     public long executeLargeUpdate() throws SQLException {
         String sql = prepareSql();
         try {
-            ResultData data = connection.getExecutor().executeSql(sql);
-            this.resultSet = new KineResultSet(data, connection);
+            ExecutorParams executorParams = new ExecutorParams(this.fetchSize, this.currentDatabase, this.engine);
+            ResultData data = connection.getExecutor().executeSql(sql, executorParams);
+            this.resultSet = new StaticResultSet(data, connection);
             if (this.resultSet != null) {
                 this.updateCount = data.size();
                 return data.size();
@@ -176,8 +192,9 @@ public class KinePrepareStatement extends KineStatement implements PreparedState
     public boolean execute() throws SQLException {
         String sql = prepareSql();
         try {
-            ResultData data = connection.getExecutor().executeSql(sql);
-            this.resultSet = new KineResultSet(data, connection);
+            ExecutorParams executorParams = new ExecutorParams(this.fetchSize, this.currentDatabase, this.engine);
+            ResultData data = connection.getExecutor().executeSql(sql, executorParams);
+            this.resultSet = new StaticResultSet(data, connection);
             return this.resultSet != null ;
         } catch (Exception e) {
             throw new SQLException(e);

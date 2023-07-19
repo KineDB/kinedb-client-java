@@ -13,7 +13,7 @@ public class TestUtil {
     static String host = "127.0.0.1";
     static int port = 10301;
 
-    static String database = "mysql_db";
+    static String database = "mysql100";
 
     private static boolean initialized = false;
 
@@ -66,7 +66,7 @@ public class TestUtil {
 
     public static String getURLWithDatabase() {
         return "jdbc:kine://"
-                + host + ":" + port + "/" + database + "?engine=presto";
+                + host + ":" + port + "/" + database + "?engine=presto&fetchSize=1000";
     }
 
     public static void createTable(Connection con, String table, String columns) throws SQLException {

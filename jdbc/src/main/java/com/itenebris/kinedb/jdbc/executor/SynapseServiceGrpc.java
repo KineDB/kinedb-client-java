@@ -46,6 +46,37 @@ public final class SynapseServiceGrpc {
     return getExecuteMethod;
   }
 
+  private static volatile io.grpc.MethodDescriptor<Kine.Statement,
+      Kine.Results> getStreamExecuteMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "streamExecute",
+      requestType = Kine.Statement.class,
+      responseType = Kine.Results.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
+  public static io.grpc.MethodDescriptor<Kine.Statement,
+      Kine.Results> getStreamExecuteMethod() {
+    io.grpc.MethodDescriptor<Kine.Statement, Kine.Results> getStreamExecuteMethod;
+    if ((getStreamExecuteMethod = SynapseServiceGrpc.getStreamExecuteMethod) == null) {
+      synchronized (SynapseServiceGrpc.class) {
+        if ((getStreamExecuteMethod = SynapseServiceGrpc.getStreamExecuteMethod) == null) {
+          SynapseServiceGrpc.getStreamExecuteMethod = getStreamExecuteMethod =
+              io.grpc.MethodDescriptor.<Kine.Statement, Kine.Results>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "streamExecute"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  Kine.Statement.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  Kine.Results.getDefaultInstance()))
+              .setSchemaDescriptor(new SynapseServiceMethodDescriptorSupplier("streamExecute"))
+              .build();
+        }
+      }
+    }
+    return getStreamExecuteMethod;
+  }
+
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -101,6 +132,13 @@ public final class SynapseServiceGrpc {
       io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getExecuteMethod(), responseObserver);
     }
 
+    /**
+     */
+    public void streamExecute(Kine.Statement request,
+                              io.grpc.stub.StreamObserver<Kine.Results> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getStreamExecuteMethod(), responseObserver);
+    }
+
     @Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
           .addMethod(
@@ -110,6 +148,13 @@ public final class SynapseServiceGrpc {
                 Kine.Statement,
                 Kine.Results>(
                   this, METHODID_EXECUTE)))
+          .addMethod(
+            getStreamExecuteMethod(),
+            io.grpc.stub.ServerCalls.asyncServerStreamingCall(
+              new MethodHandlers<
+                Kine.Statement,
+                Kine.Results>(
+                  this, METHODID_STREAM_EXECUTE)))
           .build();
     }
   }
@@ -135,6 +180,14 @@ public final class SynapseServiceGrpc {
       io.grpc.stub.ClientCalls.asyncUnaryCall(
           getChannel().newCall(getExecuteMethod(), getCallOptions()), request, responseObserver);
     }
+
+    /**
+     */
+    public void streamExecute(Kine.Statement request,
+                              io.grpc.stub.StreamObserver<Kine.Results> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncServerStreamingCall(
+          getChannel().newCall(getStreamExecuteMethod(), getCallOptions()), request, responseObserver);
+    }
   }
 
   /**
@@ -156,6 +209,14 @@ public final class SynapseServiceGrpc {
     public Kine.Results execute(Kine.Statement request) {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
           getChannel(), getExecuteMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public java.util.Iterator<Kine.Results> streamExecute(
+        Kine.Statement request) {
+      return io.grpc.stub.ClientCalls.blockingServerStreamingCall(
+          getChannel(), getStreamExecuteMethod(), getCallOptions(), request);
     }
   }
 
@@ -183,6 +244,7 @@ public final class SynapseServiceGrpc {
   }
 
   private static final int METHODID_EXECUTE = 0;
+  private static final int METHODID_STREAM_EXECUTE = 1;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -203,6 +265,10 @@ public final class SynapseServiceGrpc {
       switch (methodId) {
         case METHODID_EXECUTE:
           serviceImpl.execute((Kine.Statement) request,
+              (io.grpc.stub.StreamObserver<Kine.Results>) responseObserver);
+          break;
+        case METHODID_STREAM_EXECUTE:
+          serviceImpl.streamExecute((Kine.Statement) request,
               (io.grpc.stub.StreamObserver<Kine.Results>) responseObserver);
           break;
         default:
@@ -267,6 +333,7 @@ public final class SynapseServiceGrpc {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
               .setSchemaDescriptor(new SynapseServiceFileDescriptorSupplier())
               .addMethod(getExecuteMethod())
+              .addMethod(getStreamExecuteMethod())
               .build();
         }
       }

@@ -44,7 +44,7 @@ public class KineConnection implements Connection {
     public KineConnection(DriverUri uri) {
         Objects.requireNonNull(uri, "uri is null");
 
-        this.queryClient = new KineDBGrpcClient(uri.getJdbcUri().getHost(), uri.getJdbcUri().getPort(), uri.getDatabase(), uri.getEngine());
+        this.queryClient = new KineDBGrpcClient(uri.getJdbcUri().getHost(), uri.getJdbcUri().getPort(), uri.getDatabase(), uri.getEngine(), uri.getFetchSize());
         log.debug("Init KineConnection success uri: {}", uri.getJdbcUri());
         this.url = uri.getJdbcUri().toString();
     }
